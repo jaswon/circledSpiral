@@ -1,0 +1,112 @@
+<html>
+<head>
+  <title>Circled Spiral</title>
+	<style>
+		head, body, canvas {
+			margin: 0;
+			padding: 0;
+			height: 100%;
+			width: 100%;
+		}	
+		#controls {
+			position: absolute;
+			margin: 10px;
+			padding: 10px;
+			background-color: #eee;
+		}
+	</style>
+</head>
+<body>
+	<div id="controls">
+		<table style="font-family: monospace;">
+			<tr>
+				<td>Tangency Angle Increment</td>
+				<td><input type="range" id="k" min="5" max="90" step="1" value="45"></td>
+				<td><span id="kval">45</span>°</td>
+			</tr>
+			<tr>
+				<td>Iterations</td>
+				<td><input type="range" id="n" min="4" max="100" step="1" value="8"></td>
+				<td><span id="nval">8</span></td>
+			</tr>
+			<tr>
+				<td>Show Involute</td>
+				<td><input type="checkbox" id="showInvolute" checked></td>
+			</tr>
+		</table>
+	</div>
+  <canvas id="main"/>
+	<script>
+		const tpi = Math.PI * 2
+
+		var cvs = document.getElementById("main")
+		var ctx = cvs.getContext("2d")
+		var w = cvs.clientWidth
+		var h = cvs.clientHeight
+		cvs.width = w
+		cvs.height = h
+		ctx.translate(w/2,h/2)
+		var showInvolute = true
+		var n = 8
+		var k = 45
+
+		CanvasRenderingContext2D.prototype.circle = function(x,y,r,centerRadius = 0){
+			this.beginPath()
+			this.arc(x,y,r, 0, tpi)
+			this.stroke()
+			if (centerRadius > 0) {
+				this.circle(x,y,centerRadius,0)
+			}
+		}
+
+		ctx.lineWidth = 2.5
+
+		function redraw() {
+			var u = (Math.min(w,h)*.7)/2/n
+			var s = u/2/Math.sin(k/360*Math.PI)
+			ctx.clearRect(-w/2,-h/2,w,h)
+			ctx.strokeStyle = "black"
+			// ctx.circle(0,0,s)
+			for (var i = 0 ; i < n ; i++) {
+				let d = k/180*Math.PI*i
+				ctx.circle(s*Math.cos(d),s*Math.sin(d),u*(1+i))
+			}
+			if (showInvolute) {
+				ctx.beginPath()
+				for (var t = -k/360*tpi ; t < tpi * n * k / 360 ; t += .01) {
+					let x = s*(Math.cos(t)+(t+k/360*tpi)*Math.sin(t))
+					let y = s*(Math.sin(t)-(t+k/360*tpi)*Math.cos(t))
+					if (t == 0) {
+						ctx.moveTo(x,y)
+					}	else {
+						ctx.lineTo(x,y)
+					}
+				}
+				ctx.strokeStyle = "red"
+				ctx.stroke()
+			}
+		}
+
+		redraw()
+		document.getElementById("k").addEventListener("input", e => {
+			k = Number(e.target.value)
+			document.getElementById("kval").innerText = k
+			redraw()
+		})
+		document.getElementById("n").addEventListener("input", e => {
+			n = Number(e.target.value)
+			document.getElementById("nval").innerText = n
+			redraw()
+		})
+		document.getElementById("showInvolute").addEventListener("input", e => {
+			showInvolute = e.target.checked
+			redraw()
+		})
+
+		document.getElementById("k").value = k
+		document.getElementById("n").value = n
+		document.getElementById("showInvolute").value = showInvolute
+	</script>
+</body>
+</html>
+
